@@ -1,8 +1,8 @@
-package net.scrumplex.implify.core.exchange;
+package net.scrumplex.implify.core.exchange.socket;
 
 import net.scrumplex.implify.core.ImplifyServer;
+import net.scrumplex.implify.core.exchange.HTTPRequest;
 import net.scrumplex.implify.exceptions.ImplifyException;
-import net.scrumplex.implify.lang.RawHandler;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -12,12 +12,12 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RawSocketHandler implements RawHandler {
+public class DefaultSocketHandler implements SocketHandler {
 
 	private final Pattern httpPattern;
 
-	public RawSocketHandler() {
-		this.httpPattern = Pattern.compile("(GET|POST)\\s(.*?)(?:\\?(.*)\\s)?HTTP\\/(\\d\\.\\d)");
+	public DefaultSocketHandler() {
+		this.httpPattern = Pattern.compile("(GET|POST)\\s(.*?)(?:\\?(.*))?\\sHTTP\\/(\\d\\.\\d)");
 	}
 
 	@Override
@@ -46,11 +46,11 @@ public class RawSocketHandler implements RawHandler {
 			}
 
 			HTTPRequest request = new HTTPRequest(serverInstance, socket);
-			request.setRequestMethod(matcher.group(1));
-			request.setRequestPath(matcher.group(2));
+			request.setMethod(matcher.group(1));
+			request.setPath(matcher.group(2));
 			if (matcher.group(3) != null && matcher.group(3).length() > 0)
 				request.setGETParameterString(matcher.group(3));
-			request.setHttpVersion(matcher.group(4));
+			request.setHTTPVersion(matcher.group(4));
 			request.setHeaders(headers);
 			//TODO: Request Body
 

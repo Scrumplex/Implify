@@ -2,14 +2,19 @@ package net.scrumplex.implify.core;
 
 import net.scrumplex.implify.concurrent.ImplifyThreadFactory;
 import net.scrumplex.implify.core.exchange.*;
+import net.scrumplex.implify.core.exchange.handler.DefaultHTTPHandler;
+import net.scrumplex.implify.core.exchange.preprocess.DefaultHTTPPreprocessor;
+import net.scrumplex.implify.core.exchange.socket.DefaultSocketHandler;
 import net.scrumplex.implify.exceptions.ImplifyException;
 import net.scrumplex.implify.exceptions.ImplifyExceptionHandler;
-import net.scrumplex.implify.lang.HTTPHandler;
-import net.scrumplex.implify.lang.HTTPPreprocessor;
-import net.scrumplex.implify.lang.RawHandler;
+import net.scrumplex.implify.exceptions.ExceptionHandler;
+import net.scrumplex.implify.core.exchange.handler.HTTPHandler;
+import net.scrumplex.implify.core.exchange.preprocess.HTTPPreprocessor;
+import net.scrumplex.implify.core.exchange.socket.SocketHandler;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -28,9 +33,9 @@ public class ImplifyServer {
 
 	private boolean running;
 
-	private ImplifyExceptionHandler exceptionHandler;
 	private ImplifyThreadFactory threadFactory;
-	private RawHandler rawSocketHandler;
+	private ExceptionHandler exceptionHandler;
+	private SocketHandler socketHandler;
 	private HTTPPreprocessor httpPreprocessor;
 	private HTTPHandler httpHandler;
 	private Logger logger;
@@ -38,15 +43,15 @@ public class ImplifyServer {
 	private ServerSocket serverSocket;
 	private Thread mainThread;
 
-	public ImplifyServer(int port, String identifier) {
+	public ImplifyServer(int port, @NotNull String identifier) {
 		this("0.0.0.0", port, identifier);
 	}
 
-	public ImplifyServer(String ip, int port, String identifier) {
+	public ImplifyServer(@NotNull String ip, int port, @NotNull String identifier) {
 		this(ip, port, 1024, identifier);
 	}
 
-	public ImplifyServer(String ip, int port, int backlog, String identifier) {
+	public ImplifyServer(@NotNull String ip, int port, int backlog, @NotNull String identifier) {
 		this.ip = ip;
 		this.port = port;
 		this.backlog = backlog;
@@ -54,14 +59,20 @@ public class ImplifyServer {
 		exceptionHandler = new ImplifyExceptionHandler(this);
 		threadFactory = new ImplifyThreadFactory(this);
 		//May be changed by user if needed
-		rawSocketHandler = new RawSocketHandler();
-		httpPreprocessor = new HTTPDefaultPreprocessor();
+		socketHandler = new DefaultSocketHandler();
+		httpPreprocessor = new DefaultHTTPPreprocessor();
 		//Should be changed by user
-		httpHandler = new HTTPExampleHandler();
+		httpHandler = new DefaultHTTPHandler();
 
 		this.logger = LogManager.getLogger("implify_" + identifier);
 	}
 
+	/**
+	 * Starts the current Implify instance. It will start a new thread, which will start other threads if needed.
+	 * Exceptions will be handled by an {@link ExceptionHandler}, which can be changed with {@link ImplifyServer#setExceptionHandler(ExceptionHandler)}
+	 *
+	 * @throws ImplifyException if instance already running or an I/O error occurs.
+	 */
 	public void start() throws ImplifyException {
 		if (running)
 			throw new ImplifyException("Instance " + identifier + " already running!");
@@ -70,7 +81,7 @@ public class ImplifyServer {
 			serverSocket = new ServerSocket(port, backlog, InetAddress.getByName(ip));
 			running = true;
 		} catch (IOException e) {
-			getExceptionHandler().caughtException(e, getInstanceIdentifier());
+			throw new ImplifyException(e);
 		}
 
 		mainThread = getThreadFactory().newThread(() -> {
@@ -79,25 +90,31 @@ public class ImplifyServer {
 					Socket socket = serverSocket.accept();
 					getThreadFactory().newThread(() -> {
 						try {
-							HTTPRequest request = getRawSocketHandler().handle(this, socket);
-							if (request == null)
+							HTTPRequest request = getSocketHandler().handle(this, socket);
+							if (request == null) {
 								if (!socket.isClosed())
 									socket.close();
-							HTTPResponse response = getHttpPreprocessor().process(this, request);
-							if (response == null) {
-								response = HTTPUtils.getInternalServerErrorResponse(this, request);
-							}
-							response = getHttpHandler().handle(this, request, response);
-							if (response == null) {
-								response = HTTPUtils.getInternalServerErrorResponse(this, request);
+								return;
 							}
 
+							HTTPResponse response = getHttpPreprocessor().process(this, request);
+							if (response == null)
+								response = HTTPUtils.getInternalServerErrorResponse(this, request);
+
+							if (!response.isSaved()) {
+								response = getHttpHandler().handle(this, request, response);
+								if (response == null)
+									response = HTTPUtils.getInternalServerErrorResponse(this, request);
+								if(!response.isSaved())
+									response.save();
+							}
+
+							//Send to client
 							DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
 							out.writeBytes("HTTP/1.1 " + response.getStatusCode().getCode() + " " + response.getStatusCode().getCodeName() + "\n");
 
 							for (String headerKey : response.getHeaders().keySet()) {
-								//TODO: URL ENCODING?
 								String headerValue = response.getHeaders().get(headerKey);
 								out.writeBytes(headerKey + ": " + headerValue + "\n");
 							}
@@ -125,6 +142,11 @@ public class ImplifyServer {
 		mainThread.start();
 	}
 
+	/**
+	 * Stops current implify instance.
+	 *
+	 * @throws ImplifyException if instance not running or an I/O error occurs.
+	 */
 	public void stop() throws ImplifyException {
 		if (!running)
 			throw new ImplifyException("Instance " + identifier + " not running!");
@@ -134,12 +156,16 @@ public class ImplifyServer {
 				serverSocket.close();
 			running = false;
 		} catch (IOException e) {
-			getExceptionHandler().caughtException(e, "stop_instance_" + identifier);
+			throw new ImplifyException(e);
 		}
 	}
 
-	public ImplifyExceptionHandler getExceptionHandler() {
+	public ExceptionHandler getExceptionHandler() {
 		return exceptionHandler;
+	}
+
+	private void setExceptionHandler(@NotNull ExceptionHandler exceptionHandler) {
+		this.exceptionHandler = exceptionHandler;
 	}
 
 	public String getIdentifier() {
@@ -158,23 +184,23 @@ public class ImplifyServer {
 		return httpPreprocessor;
 	}
 
-	public void setHttpPreprocessor(HTTPPreprocessor httpPreprocessor) {
+	public void setHttpPreprocessor(@NotNull HTTPPreprocessor httpPreprocessor) {
 		this.httpPreprocessor = httpPreprocessor;
 	}
 
-	public RawHandler getRawSocketHandler() {
-		return rawSocketHandler;
+	public SocketHandler getSocketHandler() {
+		return socketHandler;
 	}
 
-	public void setRawSocketHandler(RawHandler rawSocketHandler) {
-		this.rawSocketHandler = rawSocketHandler;
+	public void setSocketHandler(@NotNull SocketHandler socketHandler) {
+		this.socketHandler = socketHandler;
 	}
 
 	public Logger getLogger() {
 		return logger;
 	}
 
-	public void setLogger(Logger logger) {
+	public void setLogger(@NotNull Logger logger) {
 		this.logger = logger;
 	}
 
@@ -186,7 +212,7 @@ public class ImplifyServer {
 		return httpHandler;
 	}
 
-	public void setHttpHandler(HTTPHandler httpHandler) {
+	public void setHttpHandler(@NotNull HTTPHandler httpHandler) {
 		this.httpHandler = httpHandler;
 	}
 }

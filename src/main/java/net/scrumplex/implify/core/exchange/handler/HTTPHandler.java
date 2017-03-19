@@ -1,4 +1,4 @@
-package net.scrumplex.implify.lang;
+package net.scrumplex.implify.core.exchange.handler;
 
 import net.scrumplex.implify.core.ImplifyServer;
 import net.scrumplex.implify.core.exchange.HTTPRequest;

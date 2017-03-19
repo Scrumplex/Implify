@@ -2,6 +2,7 @@ package net.scrumplex.implify.core.exchange;
 
 import net.scrumplex.implify.core.ImplifyServer;
 import net.scrumplex.implify.exceptions.ImplifyException;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -17,8 +18,9 @@ public class HTTPResponse {
 	private Code statusCode;
 	private boolean compressed;
 	private InputStream responseData;
+	private boolean saved;
 
-	public HTTPResponse(ImplifyServer serverInstance, HTTPRequest request) {
+	public HTTPResponse(@NotNull ImplifyServer serverInstance, @NotNull HTTPRequest request) {
 		this.serverInstance = serverInstance;
 		this.request = request;
 		if (request.getServerInstance() != serverInstance)
@@ -33,7 +35,7 @@ public class HTTPResponse {
 		return headers;
 	}
 
-	public void setHeaders(Map<String, String> headers) {
+	public void setHeaders(@NotNull Map<String, String> headers) {
 		this.headers = headers;
 	}
 
@@ -42,6 +44,8 @@ public class HTTPResponse {
 	}
 
 	public void setContentLength(long length) {
+		if (isSaved())
+			return;
 		if (isCompressed())
 			return;
 		getHeaders().put("Content-Length", String.valueOf(length));
@@ -51,7 +55,9 @@ public class HTTPResponse {
 		return Long.parseLong(getHeaders().get("Content-Type"));
 	}
 
-	public void setContentType(String type) {
+	public void setContentType(@NotNull String type) {
+		if (isSaved())
+			return;
 		getHeaders().put("Content-Type", type);
 	}
 
@@ -60,10 +66,16 @@ public class HTTPResponse {
 	}
 
 	public void setStatusCode(int statusCode) {
-		this.statusCode = Code.fromStatusCodeNumber(statusCode);
+		Code c = Code.fromStatusCodeNumber(statusCode);
+		if (c != null)
+			setStatusCode(c);
+		else
+			throw new NullPointerException("Status code " + statusCode + " not recognized.");
 	}
 
-	public void setStatusCode(Code statusCode) {
+	public void setStatusCode(@NotNull Code statusCode) {
+		if (isSaved() || isClosed())
+			return;
 		this.statusCode = statusCode;
 	}
 
@@ -72,6 +84,8 @@ public class HTTPResponse {
 	}
 
 	public void setCompressed(boolean compressed) {
+		if (isSaved() || isClosed())
+			return;
 		this.compressed = compressed;
 	}
 
@@ -87,15 +101,21 @@ public class HTTPResponse {
 		return responseData;
 	}
 
-	public void setResponseData(String responseData) {
+	public void setResponseData(@NotNull String responseData) {
+		if (isSaved() || isClosed())
+			return;
 		setResponseData(responseData.getBytes());
 	}
 
-	public void setResponseData(InputStream responseData) {
+	public void setResponseData(@NotNull InputStream responseData) {
+		if (isSaved() || isClosed())
+			return;
 		this.responseData = responseData;
 	}
 
-	public void setResponseData(byte[] responseData) {
+	public void setResponseData(@NotNull byte[] responseData) {
+		if (isSaved() || isClosed())
+			return;
 		setContentLength(responseData.length);
 		setResponseData(new ByteArrayInputStream(responseData));
 	}
@@ -112,6 +132,14 @@ public class HTTPResponse {
 
 	public boolean isClosed() {
 		return request == null || request.isClosed();
+	}
+
+	public boolean isSaved() {
+		return saved;
+	}
+
+	public void save() {
+		this.saved = true;
 	}
 
 	public enum Code {
@@ -159,7 +187,7 @@ public class HTTPResponse {
 		private final int code;
 		private final String codeName;
 
-		private Code(int code, String codeName) {
+		Code(int code, String codeName) {
 			this.code = code;
 			this.codeName = codeName;
 		}

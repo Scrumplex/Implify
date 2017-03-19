@@ -1,16 +1,18 @@
 package net.scrumplex.implify.exceptions;
 
+import org.jetbrains.annotations.NotNull;
+
 public class ImplifyException extends Exception {
 
-	public ImplifyException(String message) {
+	public ImplifyException(@NotNull String message) {
 		super(message);
 	}
 
-	public ImplifyException(Exception e) {
+	public ImplifyException(@NotNull Exception e) {
 		super(e);
 	}
 
-	public ImplifyException(String message, Exception e) {
+	public ImplifyException(@NotNull String message, Exception e) {
 		super(message, e);
 	}
 

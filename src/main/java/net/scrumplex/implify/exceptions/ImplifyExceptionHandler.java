@@ -1,7 +1,6 @@
 package net.scrumplex.implify.exceptions;
 
 import net.scrumplex.implify.core.ImplifyServer;
-import net.scrumplex.implify.lang.ExceptionHandler;
 
 public class ImplifyExceptionHandler implements ExceptionHandler {
 

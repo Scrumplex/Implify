@@ -1,6 +1,7 @@
 package net.scrumplex.implify.concurrent;
 
 import net.scrumplex.implify.core.ImplifyServer;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ThreadFactory;
 
@@ -12,11 +13,11 @@ public class ImplifyThreadFactory implements ThreadFactory {
 		this.serverInstance = serverInstance;
 	}
 
-	public Thread newThread(Runnable r) {
+	public Thread newThread(@NotNull Runnable r) {
 		return newThread(r, null);
 	}
 
-	public Thread newThread(Runnable r, String context) {
+	public Thread newThread(@NotNull Runnable r, String context) {
 		Thread t = new Thread(r);
 		t.setName(context == null ? "implify_" + t.getId() : context);
 		t.setPriority(8);

@@ -1,4 +1,6 @@
-package net.scrumplex.implify.lang;
+package net.scrumplex.implify.exceptions;
+
+import org.jetbrains.annotations.NotNull;
 
 public interface ExceptionHandler extends Thread.UncaughtExceptionHandler {
 
