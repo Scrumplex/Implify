@@ -12,7 +12,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
@@ -52,19 +51,14 @@ public class ImplifyServer {
 		this.port = port;
 		this.backlog = backlog;
 		this.identifier = identifier;
-		initialize();
-	}
-
-	private void initialize() {
 		exceptionHandler = new ImplifyExceptionHandler(this);
 		threadFactory = new ImplifyThreadFactory(this);
-		rawSocketHandler = new RawSocketHandler(this);
-		httpPreprocessor = new HTTPDefaultPreprocessor(this);
-		try {
-			//Default Configuration
-			httpHandler = new HTTPFileSystemHandler(this, new File(".").getCanonicalFile());
-		} catch (IOException ignored) {
-		}
+		//May be changed by user if needed
+		rawSocketHandler = new RawSocketHandler();
+		httpPreprocessor = new HTTPDefaultPreprocessor();
+		//Should be changed by user
+		httpHandler = new HTTPExampleHandler();
+
 		this.logger = LogManager.getLogger("implify_" + identifier);
 	}
 
@@ -80,20 +74,20 @@ public class ImplifyServer {
 		}
 
 		mainThread = getThreadFactory().newThread(() -> {
-			while (true) {
+			while (running) {
 				try {
 					Socket socket = serverSocket.accept();
 					getThreadFactory().newThread(() -> {
 						try {
-							HTTPRequest request = getRawSocketHandler().handle(socket);
+							HTTPRequest request = getRawSocketHandler().handle(this, socket);
 							if (request == null)
 								if (!socket.isClosed())
 									socket.close();
-							HTTPResponse response = getHttpPreprocessor().process(request);
+							HTTPResponse response = getHttpPreprocessor().process(this, request);
 							if (response == null) {
 								response = HTTPUtils.getInternalServerErrorResponse(this, request);
 							}
-							response = getHttpHandler().handle(request, response);
+							response = getHttpHandler().handle(this, request, response);
 							if (response == null) {
 								response = HTTPUtils.getInternalServerErrorResponse(this, request);
 							}
@@ -131,7 +125,9 @@ public class ImplifyServer {
 		mainThread.start();
 	}
 
-	public void stop() {
+	public void stop() throws ImplifyException {
+		if (!running)
+			throw new ImplifyException("Instance " + identifier + " not running!");
 		mainThread.interrupt();
 		try {
 			if (!serverSocket.isClosed())

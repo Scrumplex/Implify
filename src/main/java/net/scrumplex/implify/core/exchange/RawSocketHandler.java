@@ -14,16 +14,14 @@ import java.util.regex.Pattern;
 
 public class RawSocketHandler implements RawHandler {
 
-	private final ImplifyServer serverInstance;
 	private final Pattern httpPattern;
 
-	public RawSocketHandler(ImplifyServer serverInstance) {
-		this.serverInstance = serverInstance;
-		this.httpPattern = Pattern.compile("(GET|POST)\\s(.*)\\sHTTP\\/(\\d\\.\\d)");
+	public RawSocketHandler() {
+		this.httpPattern = Pattern.compile("(GET|POST)\\s(.*?)(?:\\?(.*)\\s)?HTTP\\/(\\d\\.\\d)");
 	}
 
 	@Override
-	public HTTPRequest handle(Socket socket) throws ImplifyException {
+	public HTTPRequest handle(ImplifyServer serverInstance, Socket socket) throws ImplifyException {
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -50,7 +48,9 @@ public class RawSocketHandler implements RawHandler {
 			HTTPRequest request = new HTTPRequest(serverInstance, socket);
 			request.setRequestMethod(matcher.group(1));
 			request.setRequestPath(matcher.group(2));
-			request.setHttpVersion(matcher.group(3));
+			if (matcher.group(3) != null && matcher.group(3).length() > 0)
+				request.setGETParameterString(matcher.group(3));
+			request.setHttpVersion(matcher.group(4));
 			request.setHeaders(headers);
 			//TODO: Request Body
 

@@ -59,12 +59,12 @@ public class HTTPResponse {
 		return statusCode;
 	}
 
-	public void setStatusCode(Code statusCode) {
-		this.statusCode = statusCode;
-	}
-
 	public void setStatusCode(int statusCode) {
 		this.statusCode = Code.fromStatusCodeNumber(statusCode);
+	}
+
+	public void setStatusCode(Code statusCode) {
+		this.statusCode = statusCode;
 	}
 
 	public boolean isCompressed() {
@@ -87,6 +87,10 @@ public class HTTPResponse {
 		return responseData;
 	}
 
+	public void setResponseData(String responseData) {
+		setResponseData(responseData.getBytes());
+	}
+
 	public void setResponseData(InputStream responseData) {
 		this.responseData = responseData;
 	}
@@ -94,10 +98,6 @@ public class HTTPResponse {
 	public void setResponseData(byte[] responseData) {
 		setContentLength(responseData.length);
 		setResponseData(new ByteArrayInputStream(responseData));
-	}
-
-	public void setResponseData(String responseData) {
-		setResponseData(responseData.getBytes());
 	}
 
 	public void close() throws IOException {
@@ -164,20 +164,20 @@ public class HTTPResponse {
 			this.codeName = codeName;
 		}
 
-		public String getCodeName() {
-			return codeName;
-		}
-
-		public int getCode() {
-			return code;
-		}
-
 		public static Code fromStatusCodeNumber(int statusCode) {
 			for (Code code : Code.values()) {
 				if (code.getCode() == statusCode)
 					return code;
 			}
 			return null;
+		}
+
+		public String getCodeName() {
+			return codeName;
+		}
+
+		public int getCode() {
+			return code;
 		}
 	}
 }

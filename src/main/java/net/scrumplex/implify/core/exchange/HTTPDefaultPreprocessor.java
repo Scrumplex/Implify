@@ -4,21 +4,14 @@ import net.scrumplex.implify.core.ImplifyServer;
 import net.scrumplex.implify.exceptions.ImplifyException;
 import net.scrumplex.implify.lang.HTTPPreprocessor;
 
-import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 
 public class HTTPDefaultPreprocessor implements HTTPPreprocessor {
 
-	private final ImplifyServer serverInstance;
-
-	public HTTPDefaultPreprocessor(ImplifyServer serverInstance) {
-		this.serverInstance = serverInstance;
-	}
-
 	@Override
-	public HTTPResponse process(HTTPRequest request) throws ImplifyException {
+	public HTTPResponse process(ImplifyServer serverInstance, HTTPRequest request) throws ImplifyException {
 		try {
 			HTTPResponse response = new HTTPResponse(serverInstance, request);
 
@@ -47,7 +40,7 @@ public class HTTPDefaultPreprocessor implements HTTPPreprocessor {
 			response.setHeaders(responseHeaders);
 			return response;
 		} catch (Exception e) {
-		    throw new ImplifyException(e);
+			throw new ImplifyException(e);
 		}
 	}
 }

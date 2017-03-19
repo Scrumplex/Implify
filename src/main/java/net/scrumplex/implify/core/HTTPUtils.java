@@ -8,8 +8,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HTTPUtils {
 
@@ -43,6 +44,23 @@ public class HTTPUtils {
 		} catch (UnsupportedEncodingException ignored) {
 		}
 		return string;
+	}
+
+	public static Map<String, String> parseParameterString(String parameterString) {
+		Map<String, String> parameters = new HashMap<>();
+		if (parameterString.contains("&")) {
+			//Multiple parameters
+			String[] params = parameterString.split("&");
+			for (String param : params) {
+				String[] parts = param.split("=", 2);
+				parameters.put(parts[0], HTTPUtils.decodeString(parts[1]));
+			}
+		} else {
+			//Just one parameter
+			String[] parts = parameterString.split("=", 2);
+			parameters.put(parts[0], HTTPUtils.decodeString(parts[1]));
+		}
+		return parameters;
 	}
 
 	public static HTTPResponse getInternalServerErrorResponse(ImplifyServer serverInstance, HTTPRequest request) {

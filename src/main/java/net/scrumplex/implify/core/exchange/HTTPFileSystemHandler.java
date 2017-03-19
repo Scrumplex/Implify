@@ -4,24 +4,23 @@ import net.scrumplex.implify.core.HTTPUtils;
 import net.scrumplex.implify.core.ImplifyServer;
 import net.scrumplex.implify.exceptions.ImplifyException;
 import net.scrumplex.implify.lang.HTTPHandler;
-import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 public class HTTPFileSystemHandler implements HTTPHandler {
-	private final ImplifyServer serverInstance;
 	private final File parentDirectory;
 
-	public HTTPFileSystemHandler(ImplifyServer serverInstance, File parentDirectory) {
-		this.serverInstance = serverInstance;
+	public HTTPFileSystemHandler(File parentDirectory) {
 		this.parentDirectory = parentDirectory;
 	}
 
-	public HTTPResponse handle(HTTPRequest request, HTTPResponse response) throws ImplifyException {
+	public HTTPResponse handle(ImplifyServer serverInstance, HTTPRequest request, HTTPResponse response) throws ImplifyException {
 		try {
 			File f = new File(parentDirectory, request.getRequestPath().substring(1));
 			if (f.isDirectory())
-				f = new File(f, "index.html");
+				f = new File(parentDirectory, "demo.html");
 
 			if (!f.exists()) {
 				response.getHeaders().put("Content-Type", "text/plain; charset=UTF-8");

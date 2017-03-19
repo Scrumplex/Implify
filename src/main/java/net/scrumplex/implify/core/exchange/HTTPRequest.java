@@ -1,5 +1,6 @@
 package net.scrumplex.implify.core.exchange;
 
+import net.scrumplex.implify.core.HTTPUtils;
 import net.scrumplex.implify.core.ImplifyServer;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ public class HTTPRequest {
 	private String requestMethod;
 	private String httpVersion;
 	private Map<String, String> headers;
+	private Map<String, String> getParameters;
 	private HTTPResponse response;
 
 	public HTTPRequest(ImplifyServer serverInstance, Socket socket) {
@@ -87,5 +89,13 @@ public class HTTPRequest {
 
 	public boolean isClosed() {
 		return socket == null || socket.isClosed();
+	}
+
+	public Map<String, String> getGETParameters() {
+		return getParameters;
+	}
+
+	public void setGETParameterString(String parameterString) {
+		this.getParameters = HTTPUtils.parseParameterString(parameterString);
 	}
 }
