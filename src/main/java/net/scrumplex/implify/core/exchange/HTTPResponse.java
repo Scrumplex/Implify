@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -84,7 +85,7 @@ public class HTTPResponse {
 	}
 
 	public void setCompressed(boolean compressed) {
-		if (isSaved() || isClosed())
+		if (isSaved() || isClosed() || serverInstance.isGzipEnabled())
 			return;
 		this.compressed = compressed;
 	}
@@ -104,7 +105,11 @@ public class HTTPResponse {
 	public void setResponseData(@NotNull String responseData) {
 		if (isSaved() || isClosed())
 			return;
-		setResponseData(responseData.getBytes());
+		try {
+			setResponseData(responseData.getBytes("UTF-8"));
+		} catch (UnsupportedEncodingException ignored) {
+			setResponseData(responseData.getBytes());
+		}
 	}
 
 	public void setResponseData(@NotNull InputStream responseData) {

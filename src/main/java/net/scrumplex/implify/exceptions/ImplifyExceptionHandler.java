@@ -2,6 +2,8 @@ package net.scrumplex.implify.exceptions;
 
 import net.scrumplex.implify.core.ImplifyServer;
 
+import java.util.logging.Level;
+
 public class ImplifyExceptionHandler implements ExceptionHandler {
 
 	private final ImplifyServer serverInstance;
@@ -12,12 +14,12 @@ public class ImplifyExceptionHandler implements ExceptionHandler {
 
 	@Override
 	public void uncaughtException(Thread t, Throwable e) {
-		serverInstance.getLogger().error("An error occurred in thread " + t.getName());
+		serverInstance.getLogger().log(Level.SEVERE, "An error occurred in thread " + t.getName());
 		e.printStackTrace();
 	}
 
 	public void caughtException(Throwable e, String context) {
-		serverInstance.getLogger().error("An error occurred in context " + context);
+		serverInstance.getLogger().log(Level.SEVERE, "An error occurred in context " + context);
 		e.printStackTrace();
 	}
 }

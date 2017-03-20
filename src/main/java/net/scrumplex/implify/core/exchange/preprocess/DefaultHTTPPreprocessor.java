@@ -35,7 +35,7 @@ public class DefaultHTTPPreprocessor implements HTTPPreprocessor {
 			Map<String, String> responseHeaders = new HashMap<>();
 			responseHeaders.put("Accept-Ranges", "bytes");
 			responseHeaders.put("Connection", "close"); //TODO: implement keep-alive
-			if (response.isCompressed())
+			if (response.isCompressed() && serverInstance.isGzipEnabled())
 				responseHeaders.put("Content-Encoding", "gzip");
 			responseHeaders.put("Date", dateFormat.format(calendar.getTime()));
 			responseHeaders.put("Server", "Implify/1.0");

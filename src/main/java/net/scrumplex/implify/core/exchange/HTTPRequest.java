@@ -78,7 +78,7 @@ public class HTTPRequest {
 	/**
 	 * Getter method for socket.
 	 *
-	 * @return socket as {@link java.net,Socket}
+	 * @return socket as {@link java.net.Socket}
 	 */
 	public Socket getSocket() {
 		return socket;
