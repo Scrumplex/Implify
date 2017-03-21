@@ -17,7 +17,7 @@ public class DefaultSocketHandler implements SocketHandler {
 	private final Pattern httpPattern;
 
 	public DefaultSocketHandler() {
-		this.httpPattern = Pattern.compile("(GET|POST)\\s(.*?)(?:\\?(.*))?\\sHTTP\\/(\\d\\.\\d)");
+		this.httpPattern = Pattern.compile("(GET|POST)\\s(.*?)(?:\\?(.*))?\\sHTTP/(\\d\\.\\d)");
 	}
 
 	@Override

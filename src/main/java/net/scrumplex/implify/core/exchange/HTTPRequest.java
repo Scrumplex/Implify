@@ -46,7 +46,7 @@ public class HTTPRequest {
 	/**
 	 * Getter method for method.
 	 *
-	 * @return method as {@link java.lang.String}
+	 * @return method as {@link Method}
 	 */
 	public Method getMethod() {
 		return method;
@@ -171,7 +171,7 @@ public class HTTPRequest {
 		GET("GET"),
 		POST("POST");
 
-		private String method;
+		private final String method;
 
 		Method(String method) {
 			this.method = method;

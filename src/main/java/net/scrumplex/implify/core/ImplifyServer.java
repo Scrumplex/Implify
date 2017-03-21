@@ -73,7 +73,7 @@ public class ImplifyServer {
 			@Override
 			public void publish(LogRecord record) {
 				StringBuilder sb = new StringBuilder();
-				sb.append("[" + record.getLevel().getName() + "] ");
+				sb.append("[").append(record.getLevel().getName()).append("] ");
 				sb.append(record.getMessage()).append('\n');
 				if (record.getLevel() == Level.WARNING || record.getLevel() == Level.SEVERE) {
 					System.err.println(sb.toString());

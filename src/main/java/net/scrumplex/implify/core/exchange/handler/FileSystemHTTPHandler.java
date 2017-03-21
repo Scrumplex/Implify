@@ -12,7 +12,7 @@ import java.io.IOException;
 
 public class FileSystemHTTPHandler implements HTTPHandler {
 	private final File parentDirectory;
-	private String[] indexFiles;
+	private final String[] indexFiles;
 
 	public FileSystemHTTPHandler(File parentDirectory, String... indexFiles) {
 		this.parentDirectory = parentDirectory;

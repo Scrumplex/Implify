@@ -7,7 +7,7 @@ import java.util.concurrent.ThreadFactory;
 
 public class ImplifyThreadFactory implements ThreadFactory {
 
-	private ImplifyServer serverInstance;
+	private final ImplifyServer serverInstance;
 
 	public ImplifyThreadFactory(ImplifyServer serverInstance) {
 		this.serverInstance = serverInstance;
