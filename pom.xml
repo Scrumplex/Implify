@@ -9,8 +9,8 @@
     <version>0.0.1</version>
     <packaging>jar</packaging>
 
-    <name>Implify Core</name>
-    <description>Implify HTTP Server.</description>
+    <name>Implify</name>
+    <description>Implify HTTP Server</description>
     <url>https://github.com/Scrumplex/Implify</url>
 
     <licenses>

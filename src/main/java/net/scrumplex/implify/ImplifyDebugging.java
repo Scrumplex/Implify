@@ -7,7 +7,7 @@ import net.scrumplex.implify.exceptions.ImplifyException;
 import java.io.File;
 import java.util.logging.Level;
 
-public class Main {
+class ImplifyDebugging {
 
 	public static void main(String[] args) {
 		ImplifyServer implifyServer = new ImplifyServer(8080, "default");

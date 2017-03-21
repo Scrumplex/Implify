@@ -80,7 +80,6 @@ public class ImplifyServer {
 					return;
 				}
 				System.out.println(sb.toString());
-
 			}
 
 			@Override
